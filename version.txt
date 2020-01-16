@@ -1,0 +1,3 @@
+The latest available versions:
+IDA: v7.4.191112
+Decompiler: v7.4.191112
