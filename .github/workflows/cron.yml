@@ -1,18 +1,30 @@
 on:
   push:
   schedule:
-  - cron: '20 * * * *'
+  - cron: '*/5 * * * *'
 
 jobs:
   cron:
-    if: github.ref == 'refs/heads/master'
     runs-on: ubuntu-latest
     steps:
-    - name: checkout
-      uses: actions/checkout@v2
-    - run: exec .github/cron.sh
+    - uses: actions/checkout@v2
+    - name: Get latest version
+      run: |
+        curl --silent --show-error https://www.hex-rays.com/updida/ | python -c "import re, sys; sys.stdout.write(re.search(r'(Latest available versions:) <strong>(IDA: .*?)</strong> &ndash; <strong>(Decompiler: .*?)</strong>', sys.stdin.read()).expand(r'\1\n\2\n\3'))" >version.txt
+        cat version.txt
+    - name: Notify and commit if dirty
+      if: github.ref == 'refs/heads/master'
       env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         REFRESH_TOKEN: ${{ secrets.REFRESH_TOKEN }}
         CLIENT_ID: ${{ secrets.CLIENT_ID }}
         CLIENT_SECRET: ${{ secrets.CLIENT_SECRET }}
+      run: |
+        if [ -n "$(git status --porcelain)" ]; then
+        	pip3 install -r ./requirements.txt
+        	cat version.txt | TO=ida-update@googlegroups.com SUBJECT='new version of IDA Pro is available' ./gmail.py
+        	git config --global user.name 'GitHub Actions'
+        	git config --global user.email "$(whoami)@$(hostname --fqdn)"
+        	git add --all
+        	git commit --all --message 'IDA updated'
+        	git push
+        fi
