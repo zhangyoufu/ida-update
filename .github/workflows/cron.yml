@@ -10,7 +10,7 @@ jobs:
     - uses: actions/checkout@v2
     - name: Get latest version
       run: |
-        curl --silent --show-error https://www.hex-rays.com/updida/ | python -c "import re, sys; sys.stdout.write(re.search(r'(Latest available versions:) <strong>(IDA: .*?)</strong> &ndash; <strong>(Decompiler: .*?)</strong>', sys.stdin.read()).expand(r'\1\n\2\n\3'))" >version.txt
+        curl --silent --show-error https://www.hex-rays.com/updida/ | python -c "import re, sys; sys.stdout.write(re.search(r'(Latest available version:) <strong>(IDA and decompilers .*?)</strong>', sys.stdin.read()).expand(r'\1\n\2'))" >version.txt
         cat version.txt
     - name: Notify and commit if dirty
       if: github.ref == 'refs/heads/master'
