@@ -2,26 +2,27 @@ on:
   push:
   schedule:
   - cron: '*/5 * * * *'
-
+defaults:
+  run:
+    shell: bash
 jobs:
   cron:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
+      with:
+        fetch-depth: 2
     - name: Get latest version
-      run: |
-        curl --silent --show-error https://www.hex-rays.com/updida/ | python -c "import re, sys; sys.stdout.write(re.search(r'(Latest available version:) <strong>(IDA and decompilers .*?)</strong>', sys.stdin.read()).expand(r'\1\n\2'))" >version.txt
-        cat version.txt
+      run: |-
+        curl --silent --show-error https://hex-rays.com/updida | python -c "import re, sys; print(re.sub(r'<[^>]+?>', '', re.search(r'Latest available version: <strong>IDA and decompilers (.*?)</strong>', sys.stdin.read()).group(1)))" >version.txt
     - name: Notify and commit if dirty
       if: github.ref == 'refs/heads/master'
       env:
-        REFRESH_TOKEN: ${{ secrets.REFRESH_TOKEN }}
-        CLIENT_ID: ${{ secrets.CLIENT_ID }}
-        CLIENT_SECRET: ${{ secrets.CLIENT_SECRET }}
-      run: |
+        DINGTALK_BOT_TOKEN: ${{ secrets.DINGTALK_BOT_TOKEN }}
+      run: |-
         if [ -n "$(git status --porcelain)" ]; then
-        	pip3 install -r ./requirements.txt
-        	cat version.txt | TO=ida-update@googlegroups.com SUBJECT='new version of IDA Pro is available' ./gmail.py
+        	export DINGTALK_BOT_MSG=$(cat version.txt)
+        	curl --header 'Content-Type: application/json' --data-raw "$(jq -n '{msgtype:"text",text:{content:env.DINGTALK_BOT_MSG}}')" "https://oapi.dingtalk.com/robot/send?access_token=$DINGTALK_BOT_TOKEN"
         	git config --global user.name 'GitHub Actions'
         	git config --global user.email "$(whoami)@$(hostname --fqdn)"
         	git add --all

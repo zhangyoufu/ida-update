@@ -1,2 +1,1 @@
-Latest available version:
-IDA and decompilers v7.5.200619
+v7.7.220218sp1
