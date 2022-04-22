@@ -1,4 +1,5 @@
 on:
+  push:
   schedule:
   - cron: '47 12 * * *'
 defaults:
@@ -16,7 +17,6 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets._GITHUB_PERSONAL_ACCESS_TOKEN }}
       run: |-
-        set -euo pipefail
         UPDATED_AT=$(curl -fsS -H 'Accept: application/vnd.github.v3+json' -H "Authorization: token ${GITHUB_TOKEN}" "https://api.github.com/repos/$GITHUB_REPOSITORY" | jq -r .updated_at)
         THRESHOLD=$(date --date="$UPDATED_AT + 50 days" +%s)
         NOW=$(date +%s)
@@ -25,6 +25,7 @@ jobs:
         else
         	NEED_REFRESH=no
         fi
+        echo "need-refresh: $NEED_REFRESH"
         echo "::set-output name=need-refresh::$NEED_REFRESH"
   refresh:
     runs-on: ubuntu-latest
@@ -36,7 +37,7 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets._GITHUB_PERSONAL_ACCESS_TOKEN }}
       run: |-
-        set -euo pipefail
+        set -x
         curl -fsS -X PATCH -H 'Accept: application/vnd.github.v3+json' -H "Authorization: token ${GITHUB_TOKEN}" -H 'Content-Type: application/json' --data-raw '{"has_wiki":true}' "https://api.github.com/repos/$GITHUB_REPOSITORY" >/dev/null
         UPDATED_AT=$(curl -fsS -X PATCH -H 'Accept: application/vnd.github.v3+json' -H "Authorization: token ${GITHUB_TOKEN}" -H 'Content-Type: application/json' --data-raw '{"has_wiki":false}' "https://api.github.com/repos/$GITHUB_REPOSITORY" | jq -r .updated_at)
         THRESHOLD=$(date --date="$UPDATED_AT + 3 minutes" +%s)
