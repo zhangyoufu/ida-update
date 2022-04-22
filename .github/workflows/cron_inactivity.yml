@@ -30,7 +30,7 @@ jobs:
   refresh:
     runs-on: ubuntu-latest
     needs: check
-    if: needs.check.outputs.need-refresh == 'yes'
+    #if: needs.check.outputs.need-refresh == 'yes'
     timeout-minutes: 1
     steps:
     - name: Refresh repository
