@@ -18,11 +18,10 @@ jobs:
     - name: Notify and commit if dirty
       if: github.ref == 'refs/heads/master'
       env:
-        DINGTALK_BOT_TOKEN: ${{ secrets.DINGTALK_BOT_TOKEN }}
+        NOTIFY_TOKEN: ${{ secrets.NOTIFY_TOKEN }}
       run: |-
         if [ -n "$(git status --porcelain)" ]; then
-        	export DINGTALK_BOT_MSG=$(cat version.txt)
-        	curl --header 'Content-Type: application/json' --data-raw "$(jq -n '{msgtype:"text",text:{content:env.DINGTALK_BOT_MSG}}')" "https://youfu.work/hooks/dingtalk?access_token=$DINGTALK_BOT_TOKEN"
+        	curl --header 'Content-Type: text/plain; charset=utf-8' --data-binary @version.txt "https://youfu.work/hooks/github-cron-notify?access_token=$NOTIFY_TOKEN"
         	git config --global user.name 'GitHub Actions'
         	git config --global user.email "$(whoami)@$(hostname --fqdn)"
         	git add --all
