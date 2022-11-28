@@ -21,7 +21,7 @@ jobs:
         NOTIFY_TOKEN: ${{ secrets.NOTIFY_TOKEN }}
       run: |-
         if [ -n "$(git status --porcelain)" ]; then
-        	curl --header 'Content-Type: text/plain; charset=utf-8' --data-binary @version.txt "https://youfu.work/hooks/github-cron-notify?access_token=$NOTIFY_TOKEN"
+        	curl --header 'Content-Type: text/plain; charset=utf-8' --header "X-Access-Token: $NOTIFY_TOKEN" --data-binary @version.txt "https://youfu.work/hooks/github-ida-update"
         	git config --global user.name 'GitHub Actions'
         	git config --global user.email "$(whoami)@$(hostname --fqdn)"
         	git add --all
